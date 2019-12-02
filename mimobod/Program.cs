@@ -1,64 +1,73 @@
-﻿using System;
+﻿using Microsoft.Azure.CognitiveServices.Search.ImageSearch;
+using Microsoft.Azure.CognitiveServices.Vision.Face;
+using Microsoft.Azure.CognitiveServices.Vision.Face.Models;
+using System;
 using System.Collections.Generic;
-using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
-using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
-using System.Threading.Tasks;
 using System.IO;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Net;
+using System.Threading.Tasks;
 
-namespace face_quickstart
+namespace mimobod
 {
     class Program
     {
         // From your Face subscription in the Azure portal, get your subscription key and endpoint.
         // Set your environment variables using the names below. Close and reopen your project for changes to take effect.
-        static string SubscriptionKey = "";
+        static string SubscriptionKeyFace = "";
+        static string SubscriptionKeySearch = "";
         static string Endpoint = "";
+
+        // the image search term to be used in the query
+        static string searchTerm = "human faces with emotions";
 
         static void Main(string[] args)
         {
+            //GetImages();
 
-            ComputerVisionClient client = Authenticate(Endpoint, SubscriptionKey);
+            var client = Authenticate(Endpoint, SubscriptionKeyFace);
             // Analyze an image to get features and other properties.
-            AnalyzeImageUrl(client).Wait();
+            DetectFaceExtract(client).Wait();
+        }
+
+        public static void GetImages()
+        {
+            var client = new ImageSearchClient(new Microsoft.Azure.CognitiveServices.Search.ImageSearch.ApiKeyServiceClientCredentials(SubscriptionKeySearch));
+            // make the search request to the Bing Image API, and get the results
+            var imageResults = client.Images.SearchAsync(query: searchTerm, count: 10).Result; //search query
+            if (imageResults != null)
+            {
+                int i = 0;
+                foreach (var image in imageResults.Value)
+                {
+                    using (WebClient webClient = new WebClient())
+                    {
+                        webClient.DownloadFileAsync(new Uri($"{image.ContentUrl}"), $@"C:\Users\Mikita_Dubovik\source\repos\ForTest\image\image{i}.{image.EncodingFormat}");
+                        i++;
+                    }
+                }
+            }
         }
 
         /*
-        * AUTHENTICATE
-        * Creates a Computer Vision client used by each example.
-        */
-        public static ComputerVisionClient Authenticate(string endpoint, string key)
+         *	AUTHENTICATE
+         *	Uses subscription key and region to create a client.
+         */
+        public static IFaceClient Authenticate(string endpoint, string key)
         {
-            ComputerVisionClient client =
-                new ComputerVisionClient(new ApiKeyServiceClientCredentials(key))
-                { Endpoint = endpoint };
-            return client;
+            return new FaceClient(new Microsoft.Azure.CognitiveServices.Vision.Face.ApiKeyServiceClientCredentials(key)) { Endpoint = endpoint };
         }
 
-        /*
-        * ANALYZE IMAGE - URL IMAGE
-        * Analyze URL image. Extracts captions, categories, tags, objects, faces, racy/adult content,
-        * brands, celebrities, landmarks, color scheme, and image types.
-        */
-        public static async Task AnalyzeImageUrl(ComputerVisionClient client)
+        /* 
+         * DETECT FACES
+         * Detects features from faces and IDs them.
+         */
+        public static async Task DetectFaceExtract(IFaceClient client)
         {
-            Console.WriteLine("----------------------------------------------------------");
+            Console.WriteLine("========DETECT FACES========");
             Console.WriteLine();
 
-            // Creating a list that defines the features to be extracted from the image.
-            List<VisualFeatureTypes> features = new List<VisualFeatureTypes>()
-           {
-               VisualFeatureTypes.Categories, VisualFeatureTypes.Description,
-               VisualFeatureTypes.Faces, VisualFeatureTypes.ImageType,
-               VisualFeatureTypes.Tags, VisualFeatureTypes.Adult,
-               VisualFeatureTypes.Color, VisualFeatureTypes.Brands,
-               VisualFeatureTypes.Objects
-           };
-
-            Console.WriteLine();
-
-            string[] filePaths = Directory.GetFiles(@"D:\Work\Mimobod\dir_001", "*", SearchOption.AllDirectories);
+            // Create a list of images
+            string[] filePaths = Directory.GetFiles(@"C:\Users\Mikita_Dubovik\source\repos\ForTest\image\", "*", SearchOption.AllDirectories);
 
             foreach (var filePath in filePaths)
             {
@@ -67,26 +76,33 @@ namespace face_quickstart
                     byte[] byteData = GetImageAsByteArray(filePath);
                     using (var stream = new MemoryStream(byteData))
                     {
-                        ImageAnalysis results = await client.AnalyzeImageInStreamAsync(stream, features);
+                        IList<DetectedFace> detectedFaces;
 
-                        // Celebrities in image, if any.
-                        Console.WriteLine(filePath);
-                        Console.WriteLine("Celebrities:");
-                        foreach (var category in results.Categories)
-                        {
-                            if (category.Detail?.Celebrities != null)
+                        // Detect faces with all attributes from image url.
+                        detectedFaces = await client.Face.DetectWithStreamAsync(stream,
+                            returnFaceAttributes: new List<FaceAttributeType>
                             {
-                                foreach (var celeb in category.Detail.Celebrities)
-                                {
-                                    Console.WriteLine($"{celeb.Name} with confidence {celeb.Confidence}");
-                                }
-                            }
+                                FaceAttributeType.Emotion
+                            });
+
+                        Console.WriteLine($"{detectedFaces.Count} face(s) detected from image `{filePath}`.");
+
+                        foreach (var face in detectedFaces)
+                        {
+                            string emotionType = string.Empty;
+                            double emotionValue = 0.0;
+                            Emotion emotion = face.FaceAttributes.Emotion;
+                            if (emotion.Anger > emotionValue) { emotionValue = emotion.Anger; emotionType = "Anger"; }
+                            if (emotion.Contempt > emotionValue) { emotionValue = emotion.Contempt; emotionType = "Contempt"; }
+                            if (emotion.Disgust > emotionValue) { emotionValue = emotion.Disgust; emotionType = "Disgust"; }
+                            if (emotion.Fear > emotionValue) { emotionValue = emotion.Fear; emotionType = "Fear"; }
+                            if (emotion.Happiness > emotionValue) { emotionValue = emotion.Happiness; emotionType = "Happiness"; }
+                            if (emotion.Neutral > emotionValue) { emotionValue = emotion.Neutral; emotionType = "Neutral"; }
+                            if (emotion.Sadness > emotionValue) { emotionValue = emotion.Sadness; emotionType = "Sadness"; }
+                            if (emotion.Surprise > emotionValue) { emotionType = "Surprise"; }
+                            Console.WriteLine($"Emotion : {emotionType}");
                         }
-
-                        Console.WriteLine();
                     }
-
-                    Console.WriteLine("----------------------------------------------------------");
                 }
                 catch (Exception)
                 {
