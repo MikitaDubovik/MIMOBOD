@@ -1,3 +1,12 @@
-Определение знаменитостей по фотографии. Данный проект сделан с помощью Azure Cognitive Service, CNTK
+Определение эмоций человека по фотографии. Данный проект сделан с помощью Azure Cognitive Service, CNTK
 
-Ссылка на датасет - https://drive.google.com/drive/folders/0B5G8pYUQMNZnLTBVaENWUWdzR0E
+Ссылка на датасет, если нет возможности использовать скробблер - https://drive.google.com/drive/folders/0B5G8pYUQMNZnLTBVaENWUWdzR0E
+
+Зависимости:
+- .NET Core 2.0 SDK 2.1.202;
+- Microsoft.Azure.CognitiveServices.Search.ImageSearch; Version="2.0.0"
+- Microsoft.Azure.CognitiveServices.Vision.ComputerVision; Version="5.0.0"
+- Microsoft.Azure.CognitiveServices.Vision.Face; Version="2.5.0-preview.1"
+- Azure подписка, на ней созданный Azure Cognitive Service c типами Bing.Search.v7 и Face. Из них необходимо взять Key1 и Endpoint
+
+Запуск: В терминале зайти в папку mimobod, прописать dotnet run
