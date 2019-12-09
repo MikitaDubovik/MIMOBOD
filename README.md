@@ -1,7 +1,5 @@
 Определение эмоций человека по фотографии. Данный проект сделан с помощью Azure Cognitive Service, CNTK
 
-Ссылка на датасет, если нет возможности использовать скробблер - https://drive.google.com/drive/folders/0B5G8pYUQMNZnLTBVaENWUWdzR0E
-
 Зависимости:
 - .NET Core 2.0 SDK 2.1.202;
 - Microsoft.Azure.CognitiveServices.Search.ImageSearch; Version="2.0.0"
