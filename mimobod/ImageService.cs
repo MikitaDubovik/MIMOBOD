@@ -12,7 +12,7 @@ namespace mimobod
         public static void GetImages()
         {
             var client = AuthenticateService.AuthenticateImageClient();
-            DbService.SaveToDatabase(null,null);
+            // DbService.SaveToDatabase(null,null);
             // make the search request to the Bing Image API, and get the results
             var imageResults = client.Images.SearchAsync(query: searchTerm, count: 10000).Result; //search query
             if (imageResults != null)

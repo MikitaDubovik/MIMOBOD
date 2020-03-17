@@ -16,7 +16,7 @@ namespace mimobod
             Console.WriteLine();
             var client = AuthenticateService.AuthenticateFaceClient();
             // Create a list of images
-            string[] filePaths = Directory.GetFiles(@"C:\Users\User\Downloads\MIMOBOD-master\MIMOBOD-master\images",
+            string[] filePaths = Directory.GetFiles(@"D:\Work\Mimobod\dir_001",
                 "*", SearchOption.AllDirectories);
 
             foreach (var filePath in filePaths)
@@ -32,68 +32,78 @@ namespace mimobod
                         detectedFaces = await client.Face.DetectWithStreamAsync(stream,
                             returnFaceAttributes: new List<FaceAttributeType>
                             {
-                                FaceAttributeType.Emotion
+                                FaceAttributeType.Accessories, FaceAttributeType.Age,
+                                FaceAttributeType.Emotion, FaceAttributeType.FacialHair,
+                                FaceAttributeType.Gender, FaceAttributeType.Glasses, FaceAttributeType.Hair,
+                                FaceAttributeType.Makeup,  FaceAttributeType.Smile
                             });
 
                         Console.WriteLine($"{detectedFaces.Count} face(s) detected from image `{filePath}`.");
-                        List<string> emotions = new List<string>();
-                        foreach (var face in detectedFaces)
+                        if (detectedFaces.Count > 0)
                         {
-                            string emotionType = string.Empty;
-                            double emotionValue = 0.0;
-                            Emotion emotion = face.FaceAttributes.Emotion;
-                            if (emotion.Anger > emotionValue)
-                            {
-                                emotionValue = emotion.Anger;
-                                emotionType = "Anger";
-                            }
+                            var imageIndsex = DbService.SaveImage(byteData);
 
-                            if (emotion.Contempt > emotionValue)
+                            // Parse and print all attributes of each detected face.
+                            var faceNumber = 1;
+                            foreach (var face in detectedFaces)
                             {
-                                emotionValue = emotion.Contempt;
-                                emotionType = "Contempt";
-                            }
+                                // Get accessories of the faces
+                                List<Accessory> accessoriesList = (List<Accessory>)face.FaceAttributes.Accessories;
+                                int count = face.FaceAttributes.Accessories.Count;
+                                string accessory; string[] accessoryArray = new string[count];
+                                if (count == 0) { accessory = "NoAccessories"; }
+                                else
+                                {
+                                    for (int i = 0; i < count; ++i) { accessoryArray[i] = accessoriesList[i].Type.ToString(); }
+                                    accessory = string.Join(",", accessoryArray);
+                                }
 
-                            if (emotion.Disgust > emotionValue)
-                            {
-                                emotionValue = emotion.Disgust;
-                                emotionType = "Disgust";
-                            }
 
-                            if (emotion.Fear > emotionValue)
-                            {
-                                emotionValue = emotion.Fear;
-                                emotionType = "Fear";
-                            }
+                                // Get emotion on the face
+                                string emotionType = string.Empty;
+                                double emotionValue = 0.0;
+                                Emotion emotion = face.FaceAttributes.Emotion;
+                                if (emotion.Anger > emotionValue) { emotionValue = emotion.Anger; emotionType = "Anger"; }
+                                if (emotion.Contempt > emotionValue) { emotionValue = emotion.Contempt; emotionType = "Contempt"; }
+                                if (emotion.Disgust > emotionValue) { emotionValue = emotion.Disgust; emotionType = "Disgust"; }
+                                if (emotion.Fear > emotionValue) { emotionValue = emotion.Fear; emotionType = "Fear"; }
+                                if (emotion.Happiness > emotionValue) { emotionValue = emotion.Happiness; emotionType = "Happiness"; }
+                                if (emotion.Neutral > emotionValue) { emotionValue = emotion.Neutral; emotionType = "Neutral"; }
+                                if (emotion.Sadness > emotionValue) { emotionValue = emotion.Sadness; emotionType = "Sadness"; }
+                                if (emotion.Surprise > emotionValue) { emotionType = "Surprise"; }
 
-                            if (emotion.Happiness > emotionValue)
-                            {
-                                emotionValue = emotion.Happiness;
-                                emotionType = "Happiness";
-                            }
+                                // Get more face attributes
+                                var facialHair = string.Format("{0}", face.FaceAttributes.FacialHair.Moustache + face.FaceAttributes.FacialHair.Beard + face.FaceAttributes.FacialHair.Sideburns > 0 ? "Yes" : "No");
 
-                            if (emotion.Neutral > emotionValue)
-                            {
-                                emotionValue = emotion.Neutral;
-                                emotionType = "Neutral";
-                            }
+                                // Get hair color
+                                Hair hair = face.FaceAttributes.Hair;
+                                string color = null;
+                                if (hair.HairColor.Count == 0) { if (hair.Invisible) { color = "Invisible"; } else { color = "Bald"; } }
+                                HairColorType returnColor = HairColorType.Unknown;
+                                double maxConfidence = 0.0f;
+                                foreach (HairColor hairColor in hair.HairColor)
+                                {
+                                    if (hairColor.Confidence <= maxConfidence) { continue; }
+                                    maxConfidence = hairColor.Confidence; returnColor = hairColor.Color; color = returnColor.ToString();
+                                }
 
-                            if (emotion.Sadness > emotionValue)
-                            {
-                                emotionValue = emotion.Sadness;
-                                emotionType = "Sadness";
-                            }
+                                // Get more attributes
+                                var makeup = string.Format("{0}", (face.FaceAttributes.Makeup.EyeMakeup || face.FaceAttributes.Makeup.LipMakeup) ? "Yes" : "No");
 
-                            if (emotion.Surprise > emotionValue)
-                            {
-                                emotionType = "Surprise";
+                                DbService.SaveToDatabase(
+                                    imageIndsex,
+                                     accessory,
+                                      face.FaceAttributes.Age,
+                                       emotionType,
+                                        facialHair,
+                                         (int)face.FaceAttributes.Gender,
+                                           (int)face.FaceAttributes.Glasses,
+                                             color,
+                                              face.FaceAttributes.Smile,
+                                               faceNumber);
+                                faceNumber++;
                             }
-
-                            Console.WriteLine($"Emotion : {emotionType}");
-                            emotions.Add(emotionType);
                         }
-
-                        DbService.SaveToDatabase(byteData, emotions);
                     }
                 }
                 catch (Exception)
