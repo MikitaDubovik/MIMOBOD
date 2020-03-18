@@ -87,9 +87,6 @@ namespace mimobod
                                     maxConfidence = hairColor.Confidence; returnColor = hairColor.Color; color = returnColor.ToString();
                                 }
 
-                                // Get more attributes
-                                var makeup = string.Format("{0}", (face.FaceAttributes.Makeup.EyeMakeup || face.FaceAttributes.Makeup.LipMakeup) ? "Yes" : "No");
-
                                 DbService.SaveToDatabase(
                                     imageIndsex,
                                      accessory,
