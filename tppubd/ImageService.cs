@@ -2,7 +2,7 @@
 using System;
 using System.Net;
 
-namespace mimobod
+namespace tppubd
 {
     public class ImageService
     {

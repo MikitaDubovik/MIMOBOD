@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace mimobod
+namespace tppubd
 {
     public class ParserService
     {

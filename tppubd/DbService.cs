@@ -2,7 +2,7 @@
 using System.Data;
 using System.Data.SqlClient;
 
-namespace mimobod
+namespace tppubd
 {
     public class DbService
     {

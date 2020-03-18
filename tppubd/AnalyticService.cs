@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Azure.CognitiveServices.Vision.Face;
 using Microsoft.Azure.CognitiveServices.Vision.Face.Models;
 
-namespace mimobod
+namespace tppubd
 {
     public class AnalyticService
     {

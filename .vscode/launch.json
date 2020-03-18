@@ -10,9 +10,9 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/mimobod/bin/Debug/netcoreapp2.0/mimobod.dll",
+            "program": "${workspaceFolder}/tppubd/bin/Debug/netcoreapp2.0/tppubd.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/mimobod",
+            "cwd": "${workspaceFolder}/tppubd",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
             "stopAtEntry": false

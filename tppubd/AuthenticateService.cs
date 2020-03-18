@@ -1,7 +1,7 @@
 ﻿using Microsoft.Azure.CognitiveServices.Search.ImageSearch;
 using Microsoft.Azure.CognitiveServices.Vision.Face;
 
-namespace mimobod
+namespace tppubd
 {
     public class AuthenticateService
     {
